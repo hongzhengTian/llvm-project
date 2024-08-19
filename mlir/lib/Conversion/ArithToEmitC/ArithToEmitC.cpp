@@ -19,6 +19,8 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Transforms/DialectConversion.h"
+#include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace mlir;
 
@@ -36,11 +38,26 @@ public:
   matchAndRewrite(arith::ConstantOp arithConst,
                   arith::ConstantOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    Type newTy = this->getTypeConverter()->convertType(arithConst.getType());
-    if (!newTy)
-      return rewriter.notifyMatchFailure(arithConst, "type conversion failed");
-    rewriter.replaceOpWithNewOp<emitc::ConstantOp>(arithConst, newTy,
-                                                   adaptor.getValue());
+
+    // check if the type is an index type
+    Type originalType = arithConst.getType();
+
+    // llvm::errs() << "originalType: " << originalType << "\n";
+
+    if (originalType.isIndex()) {
+      // llvm::errs() << "Converting index type\n";
+      rewriter.replaceOpWithNewOp<emitc::ConstantOp>(arithConst, originalType,
+                                                     adaptor.getValue());
+      // llvm::errs() << "Conversion done\n";
+    } else {
+      Type newTy = this->getTypeConverter()->convertType(arithConst.getType());
+      if (!newTy)
+        return rewriter.notifyMatchFailure(arithConst, "type conversion failed");
+
+      rewriter.replaceOpWithNewOp<emitc::ConstantOp>(arithConst, newTy,
+                                                     adaptor.getValue());
+    }
+
     return success();
   }
 };

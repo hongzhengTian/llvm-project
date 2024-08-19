@@ -14,5 +14,6 @@ add_mlir_conversion_library(MLIRMemRefToEmitC
   LINK_LIBS PUBLIC
   MLIREmitCDialect
   MLIRMemRefDialect
+  MLIRFuncDialect
   MLIRTransforms
   )
